@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Cloud Storage</title>
+    <!-- Link to the external CSS file -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+    <div class="container">
+        <!-- This block will display the flashed messages -->
+        {% with messages = get_flashed_messages() %}
+          {% if messages %}
+            <div class="flash-messages">
+              {% for message in messages %}
+                <!-- Added a class for styling individual messages -->
+                <p class="flash-message">{{ message }}</p>
+              {% endfor %}
+            </div>
+          {% endif %}
+        {% endwith %}
+
+        <div class="card">
+            <h1>Upload a New File</h1>
+            <form action="/upload" method="post" enctype="multipart/form-data" class="upload-form">
+                <input type="file" name="file" class="file-input">
+                <input type="submit" value="Upload File" class="btn">
+            </form>
+        </div>
+
+        <div class="card">
+            <h2>Uploaded Files</h2>
+            <ul class="file-list">
+            {% for file in files %}
+                <li class="file-item">
+                    <a href="/uploads/{{ file }}" target="_blank">{{ file }}</a>
+                    <!-- Delete button with confirmation dialog -->
+                    <form action="/delete/{{ file }}" method="post" style="display:inline;" onsubmit="return confirm('Are you sure you want to delete this file?');">
+                        <button type="submit" class="btn btn-delete">Delete</button>
+                    </form>
+                </li>
+            {% else %}
+                <li class="file-item-empty">No files uploaded yet.</li>
+            {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+</body>
+</html>
+

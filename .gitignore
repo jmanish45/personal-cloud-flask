@@ -1,0 +1,23 @@
+Virtual Environment
+/venv
+venv/
+
+Python cache files
+pycache/
+*.pyc
+
+IDE / Editor specific files
+.vscode/
+.idea/
+
+Instance folder (can contain sensitive config)
+/instance
+database.db
+
+Uploaded files folder
+/uploads
+uploads/
+
+OS-specific files
+.DS_Store
+Thumbs.db
