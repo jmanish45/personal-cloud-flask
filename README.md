@@ -1,85 +1,65 @@
-📂 Personal Cloud Storage with AI Optimizations
+☁️ Personal Cloud Storage with AI Optimizations
+<p align="center">
+<img src="https://www.google.com/search?q=https://img.shields.io/badge/Python-3776AB%3Fstyle%3Dfor-the-badge%26logo%3Dpython%26logoColor%3Dwhite" alt="Python Badge">
+<img src="https://www.google.com/search?q=https://img.shields.io/badge/Flask-000000%3Fstyle%3Dfor-the-badge%26logo%3Dflask%26logoColor%3Dwhite" alt="Flask Badge">
+<img src="https://www.google.com/search?q=https://img.shields.io/badge/SQLAlchemy-D71F00%3Fstyle%3Dfor-the-badge%26logo%3Dsqlalchemy%26logoColor%3Dwhite" alt="SQLAlchemy Badge">
+<img src="https://www.google.com/search?q=https://img.shields.io/badge/HTML5-E34F26%3Fstyle%3Dfor-the-badge%26logo%3Dhtml5%26logoColor%3Dwhite" alt="HTML5 Badge">
+<img src="https://www.google.com/search?q=https://img.shields.io/badge/CSS3-1572B6%3Fstyle%3Dfor-the-badge%26logo%3Dcss3%26logoColor%3Dwhite" alt="CSS3 Badge">
+</p>
 
-A lightweight, self-hosted cloud storage solution built with Python and Flask.
-This web application allows users to upload, view, manage, and delete files through a clean web interface.
+📝 Project Overview
+This project is a personal cloud storage system built with Python and Flask. It provides a simple web interface for users to upload, manage, and access their files, simulating a lightweight, self-hosted version of services like Google Drive. The long-term goal is to integrate AI for smart search and automatic file organization.
 
-Think of it as a mini Google Drive / Dropbox, with a future plan for AI-powered features like smart search and auto-categorization.
+✅ Features of this Project
+File Management: ✅ Upload, view, and download files of any type.
 
-🖼️ Replace this placeholder with a screenshot of your running app!
+Secure Deletion: ✅ Delete files with a confirmation step to prevent accidental loss.
 
-✨ Features
-✅ Current Features (Mini Project)
+User Feedback: ✅ Clear on-screen messages confirm successful actions.
 
-📤 File Upload: Upload files directly from your browser.
+User Accounts: 🚧 Secure registration and login for private, individualized storage.
 
-📂 File Listing: See all uploaded files in a neat list.
+AI-Powered Search: 🔜 Future capability to search files based on their content, not just filenames.
 
-👁️ View & Download: Open files in a new tab or download them.
+Smart Categorization: 🔜 Planned feature for AI to automatically sort files into categories like "Documents," "Images," and "Receipts."
 
-🗑️ File Deletion: Delete unwanted files (with confirmation).
+Status Key: ✅ Implemented | 🚧 In Progress | 🔜 Planned
 
-✅ User Feedback: Get success messages for uploads & deletions.
+🛠️ Tech Stack
+<p>
+<img src="https://www.google.com/search?q=https://img.shields.io/badge/Python-3776AB%3Fstyle%3Dflat%26logo%3Dpython%26logoColor%3Dwhite" alt="Python Badge">
+<img src="https://www.google.com/search?q=https://img.shields.io/badge/Flask-000000%3Fstyle%3Dflat%26logo%3Dflask%26logoColor%3Dwhite" alt="Flask Badge">
+<img src="https://www.google.com/search?q=https://img.shields.io/badge/SQLAlchemy-D71F00%3Fstyle%3Dflat%26logo%3Dsqlalchemy%26logoColor%3Dwhite" alt="SQLAlchemy Badge">
+<img src="https://img.shields.io/badge/HTML5-E34F26?style=flat&logo=html5&logoColor=white" alt="HTML5 Badge">
+<img src="https://www.google.com/search?q=https://img.shields.io/badge/CSS3-1572B6%3Fstyle%3Dflat%26logo%3Dcss3%26logoColor%3Dwhite" alt="CSS3 Badge">
+</p>
 
-🚧 Planned Features (Major Project)
+Backend: Python with the Flask micro-framework.
 
-🔑 User Accounts: Secure login & personal storage.
+Database: SQLite for storing user data via Flask-SQLAlchemy.
 
-🤖 AI Smart Search: Find files based on content, not just names.
+Authentication: Flask-Login for handling secure user sessions.
 
-🧠 Auto-Categorization: AI tags files into groups (e.g., Invoices, Photos).
+Frontend: Standard HTML5 and CSS3 with Jinja2 for templating.
 
-🔗 File Sharing: Generate shareable links.
-
-🛠️ Technology Stack
-<div align="center">
-Category	Tech Used
-🖥️ Backend	
-
-💾 Database	
-
-🔐 Authentication	Flask-Login
-🎨 Frontend	
-Jinja2
-🚀 Deployment	Local Development Server
-</div>
 🚀 Getting Started
-🔧 Prerequisites
+Clone the Repository
 
-Python 3.x
-
-pip (Python package manager)
-
-⚙️ Installation & Setup
-
-Clone the repository
-
-git clone https://github.com/your-username/your-repository-name.git
+git clone [https://github.com/your-username/your-repository-name.git](https://github.com/your-username/your-repository-name.git)
 cd your-repository-name
 
+Create and Activate Virtual Environment
 
-Create & activate a virtual environment
-
-Windows
-
+# On Windows
 python -m venv venv
 .\venv\Scripts\activate
 
-
-macOS/Linux
-
-python3 -m venv venv
-source venv/bin/activate
-
-
-Install dependencies
+Install Dependencies
 
 pip install -r requirements.txt
 
-
-Run the application
+Run the Application
 
 python app.py
 
-
-Open in browser
-👉 http://127.0.0.1:5000
+Now, open your browser and go to http://127.0.0.1:5000 to see the app live! 🎉
