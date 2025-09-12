@@ -1,112 +1,85 @@
-☁️ Personal Cloud Storage with AI Optimizations 🧠
-<p align="center">
-<img src="https://www.google.com/search?q=https://placehold.co/800x400/f4f7fb/2c3e50%3Ftext%3DPersonal%2BCloud%2BStorage" alt="Project Banner"/>
-</p>
+📂 Personal Cloud Storage with AI Optimizations
 
-<p align="center">
-<em>A modern, self-hosted cloud storage solution built with Python & Flask, designed for simplicity and extensibility with powerful AI features on the roadmap.</em>
-</p>
+A lightweight, self-hosted cloud storage solution built with Python and Flask.
+This web application allows users to upload, view, manage, and delete files through a clean web interface.
 
-<p align="center">
-<img src="https://www.google.com/search?q=https://img.shields.io/badge/Python-3776AB%3Fstyle%3Dfor-the-badge%26logo%3Dpython%26logoColor%3Dwhite" alt="Python Badge">
-<img src="https://www.google.com/search?q=https://img.shields.io/badge/Flask-000000%3Fstyle%3Dfor-the-badge%26logo%3Dflask%26logoColor%3Dwhite" alt="Flask Badge">
-<img src="https://www.google.com/search?q=https://img.shields.io/badge/Status-In%2520Development-blue%3Fstyle%3Dfor-the-badge" alt="Status Badge">
-</p>
+Think of it as a mini Google Drive / Dropbox, with a future plan for AI-powered features like smart search and auto-categorization.
 
-✨ Core Features
-This project provides a clean and intuitive web interface to manage your personal files. It's the perfect starting point for building your own secure, private cloud.
+🖼️ Replace this placeholder with a screenshot of your running app!
 
-Feature
+✨ Features
+✅ Current Features (Mini Project)
 
-Status
+📤 File Upload: Upload files directly from your browser.
 
-Description
+📂 File Listing: See all uploaded files in a neat list.
 
-📂 File Uploads
+👁️ View & Download: Open files in a new tab or download them.
 
-✅
+🗑️ File Deletion: Delete unwanted files (with confirmation).
 
-Upload files of any type directly from your browser.
+✅ User Feedback: Get success messages for uploads & deletions.
 
-📝 File Listing
+🚧 Planned Features (Major Project)
 
-✅
+🔑 User Accounts: Secure login & personal storage.
 
-View all your uploaded files in a neatly organized list.
+🤖 AI Smart Search: Find files based on content, not just names.
 
-📥 Download/View
+🧠 Auto-Categorization: AI tags files into groups (e.g., Invoices, Photos).
 
-✅
+🔗 File Sharing: Generate shareable links.
 
-Click to open or download your files instantly in a new tab.
+🛠️ Technology Stack
+<div align="center">
+Category	Tech Used
+🖥️ Backend	
 
-🗑️ Secure Deletion
+💾 Database	
 
-✅
+🔐 Authentication	Flask-Login
+🎨 Frontend	
+Jinja2
+🚀 Deployment	Local Development Server
+</div>
+🚀 Getting Started
+🔧 Prerequisites
 
-Delete files with a confirmation step to prevent mistakes.
-
-👤 User Accounts
-
-🚧
-
-Secure user registration and login for private storage.
-
-🤖 AI Smart Search
-
-🔜
-
-Find files by their content, not just their name.
-
-🗂️ Auto-Category
-
-🔜
-
-Let AI automatically tag and sort your documents and images.
-
-✅: Implemented | 🚧: In Progress | 🔜: Coming Soon
-
-🛠️ Tech Stack & Architecture
-This project is built with a simple yet powerful stack, chosen for rapid development and easy maintenance.
-
-Backend: Python with the Flask micro-framework.
-
-Database: SQLite managed via Flask-SQLAlchemy for user and file metadata.
-
-Authentication: Secure session management handled by Flask-Login.
-
-Frontend: Dynamic HTML rendered with Jinja2, styled with vanilla CSS.
-
-🚀 Get Started Locally
-Ready to run your own instance? Follow these simple steps.
-
-1. Prerequisites
 Python 3.x
 
-Git
+pip (Python package manager)
 
-2. Installation & Setup
-Clone the repository:
+⚙️ Installation & Setup
 
-git clone [https://github.com/your-username/your-repository-name.git](https://github.com/your-username/your-repository-name.git)
+Clone the repository
+
+git clone https://github.com/your-username/your-repository-name.git
 cd your-repository-name
 
-Set up your virtual environment:
 
-# For Windows
+Create & activate a virtual environment
+
+Windows
+
 python -m venv venv
 .\venv\Scripts\activate
 
-# For macOS/Linux
+
+macOS/Linux
+
 python3 -m venv venv
 source venv/bin/activate
 
-Install all required packages:
+
+Install dependencies
 
 pip install -r requirements.txt
 
-Launch the application:
+
+Run the application
 
 python app.py
 
-Open your browser and navigate to http://127.0.0.1:5000. Welcome to your personal cloud! 🎉
+
+Open in browser
+👉 http://127.0.0.1:5000
