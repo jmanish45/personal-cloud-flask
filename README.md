@@ -1,7 +1,7 @@
-📂 Personal Cloud Storage with AI Optimizations
+# 📂 **Personal Cloud Storage with AI Optimizations**
 
-A lightweight, self-hosted cloud storage system built with Python and Flask.
-It allows users to upload, view, download, and delete files through a web interface.
+A lightweight, self-hosted alternative to Google Drive or Dropbox — built with **Python + Flask** and enhanced with **AI-powered features** like Smart Search and Auto-Categorization.  
+
 
 🚀 Designed as a mini-project today, with a roadmap to evolve into a major AI-powered personal cloud storage in the future.
 
