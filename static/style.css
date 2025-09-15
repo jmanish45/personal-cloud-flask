@@ -157,3 +157,27 @@ body {
     padding: 1rem;
 }
 
+/* ... all your existing CSS ... */
+
+/* NEW STYLES FOR TAGS */
+.file-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.tags-container {
+    margin-top: 8px;
+}
+
+.tag {
+    display: inline-block;
+    background-color: #e9ecef;
+    color: #495057;
+    font-size: 12px;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 12px;
+    margin-right: 5px;
+    margin-top: 5px;
+}
+

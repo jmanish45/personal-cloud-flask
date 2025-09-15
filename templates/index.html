@@ -2,20 +2,27 @@
 
 {% block content %}
     <div class="upload-section">
-        <h2>Upload a New File</h2>
-        <form action="/upload" method="post" enctype="multipart/form-data">
-            <input type="file" name="file" class="file-input">
-            <button type="submit" class="btn">Upload</button>
-        </form>
-    </div>
+        </div>
 
     <div class="file-list-section">
         <h2>Your Uploaded Files</h2>
         <ul class="file-list">
-        {% for file in files %}
+        
+        {# --- MODIFIED LOOP --- #}
+        {% for file_meta in files %}
             <li class="file-item">
-                <a href="/uploads/{{ file }}" target="_blank">{{ file }}</a>
-                <form action="/delete/{{ file }}" method="post" class="delete-form" onsubmit="return confirm('Are you sure you want to delete this file?');">
+                <div class="file-info">
+                    <a href="/uploads/{{ file_meta.filename }}" target="_blank">{{ file_meta.filename }}</a>
+                    
+                    {# --- NEW: TAGS DISPLAY --- #}
+                    <div class="tags-container">
+                        {% for tag in file_meta.tags.split(',') %}
+                            <span class="tag">{{ tag.strip() }}</span>
+                        {% endfor %}
+                    </div>
+
+                </div>
+                <form action="/delete/{{ file_meta.filename }}" method="post" class="delete-form" onsubmit="return confirm('Are you sure you want to delete this file?');">
                     <button type="submit" class="btn-delete">Delete</button>
                 </form>
             </li>

@@ -1,0 +1,10 @@
+Flask
+Flask-SQLAlchemy
+Flask-Login
+Werkzeug
+SQLAlchemy
+
+# New dependencies for AI features
+google-generativeai
+python-dotenv
+Pillow
