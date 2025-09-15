@@ -21,3 +21,5 @@ uploads/
 OS-specific files
 .DS_Store
 Thumbs.db
+GEMINI_API_KEY
+.env
