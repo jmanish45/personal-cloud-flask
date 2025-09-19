@@ -181,3 +181,15 @@ body {
     margin-top: 5px;
 }
 
+/* ... all your existing CSS ... */
+
+/* NEW STYLE FOR CATEGORY HEADINGS */
+.category-heading {
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 2px solid #e9ecef;
+    color: #495057;
+    font-size: 1.4rem;
+}
+

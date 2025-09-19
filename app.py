@@ -4,7 +4,7 @@ from flask_login import LoginManager, UserMixin, login_user, logout_user, login_
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
 import os
-from ai_utils import analyze_file # Import our new analyzer function
+from ai_utils import analyze_file, find_semantic_matches # Import our new analyzer function
 
 # Load environment variables from .env file
 load_dotenv()
@@ -97,12 +97,58 @@ def logout():
 @app.route('/')
 @login_required
 def index():
-    # --- MODIFIED LOGIC ---
-    # Instead of just listing files, we now query the database for all metadata
-    # belonging to the current user. This gives us access to filenames AND tags.
-    files_metadata = FileMetadata.query.filter_by(user_id=current_user.id).all()
-    return render_template('index.html', files=files_metadata)
+    # --- NEW CATEGORIZATION LOGIC ---
+    # 1. Define our smart categories and their keywords
+    CATEGORIES = {
+        'Receipts & Invoices': ['receipt', 'invoice', 'payment', 'bill'],
+        'ID & Documents': ['id card', 'document', 'license', 'passport', 'certificate', 'resume'],
+        'Photos & Images': ['photo', 'image', 'picture', 'screenshot', 'selfie', 'portrait'],
+    }
 
+    # 2. Fetch all file metadata for the current user
+    all_files_metadata = FileMetadata.query.filter_by(user_id=current_user.id).all()
+
+    # 3. Sort files into categories
+    categorized_files = {category: [] for category in CATEGORIES}
+    categorized_files['Other'] = [] # For files that don't match
+
+    for file_meta in all_files_metadata:
+        assigned = False
+        for category, keywords in CATEGORIES.items():
+            # Check if any of the file's tags match the category's keywords
+            if any(keyword in file_meta.tags for keyword in keywords):
+                categorized_files[category].append(file_meta)
+                assigned = True
+                break # Move to the next file once it's assigned
+        if not assigned:
+            categorized_files['Other'].append(file_meta)
+
+    # Remove empty categories from the final dict
+    final_categorized_files = {k: v for k, v in categorized_files.items() if v}
+
+    return render_template('index.html', categorized_files=final_categorized_files, title="Your Smart Dashboard")
+# --- ADD THIS ENTIRE FUNCTION ---
+@app.route('/search')
+@login_required
+def search():
+    # Get the search term from the URL (e.g., /search?query=receipt)
+    query = request.args.get('query', '')
+
+    # If the query is empty, just go back to the main page
+    if not query:
+        return redirect(url_for('index'))
+
+    # Search the database for metadata where the tags column contains the query
+    # The '%' are wildcards, making it a flexible search
+    search_term = f"%{query}%"
+    results = FileMetadata.query.filter_by(user_id=current_user.id).filter(FileMetadata.tags.like(search_term)).all()
+
+    # Create a dynamic title for the results page
+    result_title = f"Search Results for: '{query}'"
+
+    # Reuse the same index.html template to display the filtered results
+    return render_template('index.html', files=results, title=result_title)
+# ... rest of your code ...
 @app.route('/upload', methods=['POST'])
 @login_required
 def upload_file():

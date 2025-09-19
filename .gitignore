@@ -21,5 +21,7 @@ uploads/
 OS-specific files
 .DS_Store
 Thumbs.db
-GEMINI_API_KEY
+
+# --- ADD THIS LINE ---
+# Ignore environment file containing secrets
 .env
