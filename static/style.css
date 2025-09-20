@@ -46,7 +46,6 @@ body {
     font-weight: 500;
 }
 
-
 /* Alerts and Flash Messages */
 .alert {
     padding: 1rem;
@@ -55,14 +54,11 @@ body {
     color: #fff;
     text-align: center;
 }
-.alert-success {
-    background-color: #28a745;
-}
-.alert-error {
-    background-color: #dc3545;
-}
+.alert-success { background-color: #28a745; }
+.alert-error { background-color: #dc3545; }
+.alert-info { background-color: #17a2b8; }
 
-/* Authentication Forms (Login/Signup) */
+/* Authentication Forms */
 .auth-container {
     max-width: 400px;
     margin: 3rem auto;
@@ -76,9 +72,7 @@ body {
     color: #2c3e50;
     margin-bottom: 1.5rem;
 }
-.auth-form .form-group {
-    margin-bottom: 1rem;
-}
+.auth-form .form-group { margin-bottom: 1rem; }
 .auth-form label {
     display: block;
     margin-bottom: 0.5rem;
@@ -89,7 +83,7 @@ body {
     padding: 0.75rem;
     border: 1px solid #ccc;
     border-radius: 5px;
-    box-sizing: border-box; /* Important for padding */
+    box-sizing: border-box;
 }
 .auth-switch {
     text-align: center;
@@ -107,32 +101,46 @@ body {
     font-weight: bold;
     cursor: pointer;
     text-align: center;
+    transition: background-color 0.2s ease;
 }
-.btn:hover {
-    background-color: #0056b3;
-}
-.btn-primary {
-    width: 100%;
-}
+.btn:hover { background-color: #0056b3; }
+.btn-primary { width: 100%; }
 .btn-delete {
-    padding: 0.3rem 0.8rem;
+    padding: 8px 12px;
     background-color: #dc3545;
     color: white;
     border: none;
     border-radius: 5px;
     cursor: pointer;
 }
-.btn-delete:hover {
-    background-color: #c82333;
+.btn-delete:hover { background-color: #c82333; }
+.btn-share {
+    background-color: #17a2b8;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+.btn-share:hover { background-color: #117a8b; }
+
+/* Upload, Search, and File List Sections */
+.upload-section, .search-section, .file-list-section {
+    margin-bottom: 2.5rem;
 }
 
-/* File Upload and List */
-.upload-section, .file-list-section {
-    margin-bottom: 2rem;
+.search-form {
+    display: flex;
+    gap: 10px;
 }
-.file-input {
-    margin-right: 1rem;
+.search-input {
+    flex-grow: 1;
+    padding: 0.75rem;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1rem;
 }
+
 .file-list {
     list-style: none;
     padding: 0;
@@ -141,15 +149,26 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 0.75rem;
-    border: 1px solid #eee;
-    border-radius: 5px;
-    margin-bottom: 0.5rem;
+    padding: 1rem;
+    border-bottom: 1px solid #eee;
 }
-.file-item a {
+.file-item:last-child {
+    border-bottom: none;
+}
+.file-info {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+.file-info a {
     text-decoration: none;
     color: #007bff;
     font-weight: 500;
+    font-size: 1.1rem;
+}
+.file-actions {
+    display: flex;
+    gap: 10px;
 }
 .no-files {
     color: #777;
@@ -157,33 +176,20 @@ body {
     padding: 1rem;
 }
 
-/* ... all your existing CSS ... */
-
-/* NEW STYLES FOR TAGS */
-.file-info {
-    display: flex;
-    flex-direction: column;
-}
-
+/* Tags and Category Styles */
 .tags-container {
-    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
 }
-
 .tag {
-    display: inline-block;
     background-color: #e9ecef;
     color: #495057;
     font-size: 12px;
     font-weight: 500;
     padding: 3px 8px;
     border-radius: 12px;
-    margin-right: 5px;
-    margin-top: 5px;
 }
-
-/* ... all your existing CSS ... */
-
-/* NEW STYLE FOR CATEGORY HEADINGS */
 .category-heading {
     margin-top: 2rem;
     margin-bottom: 1rem;
@@ -193,3 +199,69 @@ body {
     font-size: 1.4rem;
 }
 
+/* Shared File Page Styles */
+.shared-file-box {
+    margin-top: 4rem;
+    text-align: center;
+    padding: 2rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    background-color: #f8f9fa;
+}
+.shared-filename {
+    font-size: 1.5rem;
+    font-weight: 500;
+    margin: 1rem 0;
+    padding: 1rem;
+    background-color: #fff;
+    border: 1px solid #eee;
+    border-radius: 5px;
+}
+.btn-download {
+    display: inline-block;
+    background-color: #28a745;
+    color: white;
+    padding: 0.75rem 1.5rem;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 1.1rem;
+}
+.btn-download:hover {
+    background-color: #218838;
+}
+
+/* ... all your existing CSS ... */
+
+/* --- NEW STYLES FOR LOADING INDICATOR --- */
+#loading-overlay {
+    position: fixed; /* Sit on top of the page content */
+    width: 100%;
+    height: 100%;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.8); /* Semi-transparent white background */
+    z-index: 9999; /* Ensure it's on top */
+    display: flex; /* Use flexbox for centering */
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    color: #333;
+    font-size: 1.2rem;
+}
+
+.spinner {
+    border: 8px solid #f3f3f3; /* Light grey */
+    border-top: 8px solid #007bff; /* Blue */
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    animation: spin 1.5s linear infinite;
+    margin-bottom: 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

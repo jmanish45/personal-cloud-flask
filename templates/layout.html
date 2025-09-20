@@ -19,6 +19,11 @@
             {% endif %}
         </div>
     </nav>
+    {# --- NEW: LOADING OVERLAY --- #}
+    <div id="loading-overlay">
+        <div class="spinner"></div>
+        <p>AI is organizing your files...</p>
+    </div>
 
     <div class="container">
         {% with messages = get_flashed_messages(with_categories=true) %}
@@ -31,6 +36,16 @@
 
         {% block content %}{% endblock %}
     </div>
+    {# --- NEW: JAVASCRIPT --- #}
+    <script>
+        // Show the loading overlay when the page starts to load
+        document.getElementById('loading-overlay').style.display = 'flex';
+
+        // Hide the loading overlay once the entire page content has fully loaded
+        window.onload = function() {
+            document.getElementById('loading-overlay').style.display = 'none';
+        };
+    </script>
 
 </body>
 </html>

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Shared File</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <div class="shared-file-box">
+            <h1>File Shared With You</h1>
+            <p class="shared-filename">{{ filename }}</p>
+            <a href="{{ url_for('download_shared_file', token=token) }}" class="btn btn-download">Download File</a>
+        </div>
+    </div>
+</body>
+</html>

@@ -21,7 +21,6 @@
     <div class="file-list-section">
         <h2>{{ title }}</h2>
 
-        {# --- NEW: LOOP THROUGH CATEGORIES --- #}
         {% for category, files in categorized_files.items() %}
             <h3 class="category-heading">{{ category }}</h3>
             
@@ -32,20 +31,25 @@
                             <div class="file-info">
                                 <a href="/uploads/{{ file_meta.filename }}" target="_blank">{{ file_meta.filename }}</a>
                                 <div class="tags-container">
+                                    {# This loop will now correctly display the tags #}
                                     {% for tag in file_meta.tags.split(',') %}
                                         <span class="tag">{{ tag.strip() }}</span>
                                     {% endfor %}
                                 </div>
                             </div>
-                            <form action="/delete/{{ file_meta.filename }}" method="post" class="delete-form" onsubmit="return confirm('Are you sure you want to delete this file?');">
-                                <button type="submit" class="btn-delete">Delete</button>
-                            </form>
+                            <div class="file-actions">
+                                <form action="/share/{{ file_meta.id }}" method="post" class="share-form">
+                                    <button type="submit" class="btn btn-share">Share</button>
+                                </form>
+                                <form action="/delete/{{ file_meta.filename }}" method="post" class="delete-form" onsubmit="return confirm('Are you sure you want to delete this file?');">
+                                    <button type="submit" class="btn-delete">Delete</button>
+                                </form>
+                            </div>
                         </li>
                     {% endfor %}
                 </ul>
             {% endif %}
         {% else %}
-            {# This message now shows if there are no categories at all #}
             <p class="no-files">You haven't uploaded any files yet.</p>
         {% endfor %}
     </div>
