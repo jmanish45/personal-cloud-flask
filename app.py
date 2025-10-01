@@ -185,6 +185,17 @@ def download_shared_file(token):
     user_folder = os.path.join(app.config['UPLOAD_FOLDER'], str(file_meta.user_id))
     return send_from_directory(user_folder, file_meta.filename)
 
+@app.route('/debug')
+@login_required
+def debug():
+    files = FileMetadata.query.filter_by(user_id=current_user.id).all()
+    debug_info = {
+        'user_id': current_user.id,
+        'total_files': len(files),
+        'files': [{'filename': f.filename, 'tags': f.tags} for f in files]
+    }
+    return f"<pre>{debug_info}</pre>"
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
