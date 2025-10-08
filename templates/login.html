@@ -1,28 +1,151 @@
-{% extends "auth_layout.html" %}
+{% extends "auth_base.html" %}
+
+{% block title %}Login - CloudDrive{% endblock %}
 
 {% block content %}
-<div class="auth-card">
-    <div class="auth-header">
-        <div class="logo">
-            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path><path d="M12 12v9"></path><path d="M8 17l4 4 4-4"></path></svg>
+<div class="w-full max-w-md animate-fade-in">
+    <!-- Logo & Header -->
+    <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl mb-4 shadow-lg">
+            <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z"></path>
+            </svg>
         </div>
-        <h2>Welcome Back to InsightCloud</h2>
-        <p>Enter your credentials to access your smart storage.</p>
+        <h1 class="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h1>
+        <p class="text-gray-600">Sign in to access your smart cloud storage</p>
     </div>
-    <form class="auth-form" method="POST" action="{{ url_for('login') }}">
-        <div class="form-group">
-            <label for="username">Username</label>
-            <input type="text" id="username" name="username" placeholder="e.g., jdoll" required>
-        </div>
-        <div class="form-group">
-            <label for="password">Password</label>
-            <input type="password" id="password" name="password" placeholder="••••••••" required>
-        </div>
-        <button type="submit" class="btn btn-primary">Login</button>
-    </form>
-    <div class="auth-switch">
-        <p>Don't have an account? <a href="{{ url_for('signup') }}">Sign Up</a></p>
-    </div>
-</div>
-{% endblock %}
 
+    <!-- Login Card -->
+    <div class="bg-white rounded-2xl shadow-xl p-8">
+        <form method="POST" action="{{ url_for('login') }}" class="space-y-6" id="loginForm" novalidate>
+            <!-- Username Field -->
+            <div>
+                <label for="username" class="block text-sm font-semibold text-gray-700 mb-2">
+                    Username
+                </label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                        </svg>
+                    </div>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        required
+                        autocomplete="username"
+                        spellcheck="false"
+                        class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all invalid:border-red-500"
+                        placeholder="Enter your username"
+                        minlength="3"
+                        maxlength="50"
+                    >
+                    <div class="text-red-500 text-sm mt-1 hidden" id="usernameError">
+                        Username must be at least 3 characters long
+                    </div>
+                </div>
+            </div>
+
+            <!-- Password Field -->
+            <div>
+                <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">
+                    Password
+                </label>
+                <div class="relative">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        </svg>
+                    </div>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        required
+                        autocomplete="current-password"
+                        class="block w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all invalid:border-red-500"
+                        placeholder="Enter your password"
+                        minlength="6"
+                    >
+                    <div class="text-red-500 text-sm mt-1 hidden" id="passwordError">
+                        Password must be at least 6 characters long
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button 
+                type="submit" 
+                id="loginButton"
+                class="w-full bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold py-3 px-4 rounded-lg hover:from-blue-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transform hover:scale-[1.02] transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+            >
+                <span id="buttonText">Sign In</span>
+            </button>
+        </form>
+
+        <!-- Divider -->
+        <div class="mt-6 relative">
+            <div class="absolute inset-0 flex items-center">
+                <div class="w-full border-t border-gray-300"></div>
+            </div>
+            <div class="relative flex justify-center text-sm">
+                <span class="px-4 bg-white text-gray-500">New to CloudDrive?</span>
+            </div>
+        </div>
+
+        <!-- Sign Up Link -->
+        <div class="mt-6 text-center">
+            <a href="{{ url_for('signup') }}" class="text-blue-600 hover:text-blue-700 font-semibold text-sm transition-colors">
+                Create a new account →
+            </a>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <p class="text-center text-sm text-gray-600 mt-8">
+        Powered by AI-driven file organization
+    </p>
+</div>
+
+<!-- Login-specific JavaScript -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Login page specific JS loaded');
+    
+    const form = document.getElementById('loginForm');
+    const usernameInput = document.getElementById('username');
+    const passwordInput = document.getElementById('password');
+    const usernameError = document.getElementById('usernameError');
+    const passwordError = document.getElementById('passwordError');
+    
+    // Real-time validation
+    usernameInput.addEventListener('input', function() {
+        const value = this.value.trim();
+        if (value.length > 0 && value.length < 3) {
+            usernameError.classList.remove('hidden');
+            this.classList.add('border-red-500');
+        } else {
+            usernameError.classList.add('hidden');
+            this.classList.remove('border-red-500');
+        }
+    });
+    
+    passwordInput.addEventListener('input', function() {
+        const value = this.value;
+        if (value.length > 0 && value.length < 6) {
+            passwordError.classList.remove('hidden');
+            this.classList.add('border-red-500');
+        } else {
+            passwordError.classList.add('hidden');
+            this.classList.remove('border-red-500');
+        }
+    });
+    
+    // Focus first input
+    usernameInput.focus();
+    
+    console.log('Login form initialized successfully');
+});
+</script>
+{% endblock %}

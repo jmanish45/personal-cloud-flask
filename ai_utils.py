@@ -130,4 +130,3 @@ def categorize_files_with_ai(files_metadata):
     except Exception as e:
         print(f"🔴 ERROR during AI categorization: {e}")
         return {"Uncategorized": [meta.filename for meta in files_metadata]}
-

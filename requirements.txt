@@ -9,3 +9,5 @@ Pillow
 
 PyPDF2
 python-docx
+python-pptx  
+Flask-CORS
