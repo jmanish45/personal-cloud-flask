@@ -348,7 +348,17 @@ def debug_auth():
 def health_check():
     return {'status': 'healthy', 'message': 'Personal Cloud API is running'}
 
+@app.route('/init-db')
+def init_database():
+    """Initialize database tables - run this once after deployment"""
+    try:
+        db.create_all()
+        return "✅ Database tables created successfully!", 200
+    except Exception as e:
+        return f"❌ Error creating tables: {str(e)}", 500
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
+        print("✅ Database tables created!")
     app.run(debug=True)
