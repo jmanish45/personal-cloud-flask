@@ -13,14 +13,43 @@ load_dotenv()
 app = Flask(__name__)
 
 # --- CONFIGURATION ---
-app.config['SECRET_KEY'] = 'a-very-secret-key-that-you-should-change'
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-UPLOAD_FOLDER = 'uploads'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+# Check if running on Render (production) or locally (development)
+if os.environ.get('RENDER'):
+    # 🚀 PRODUCTION MODE (on Render)
+    print("🚀 Running in PRODUCTION mode on Render")
+    
+    app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', secrets.token_hex(32))
+    
+    # Use PostgreSQL database from Render
+    database_url = os.environ.get('DATABASE_URL')
+    if database_url:
+        # Fix for SQLAlchemy compatibility
+        if database_url.startswith('postgres://'):
+            database_url = database_url.replace('postgres://', 'postgresql://', 1)
+        app.config['SQLALCHEMY_DATABASE_URI'] = database_url
+    else:
+        app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+    
+    # Use /tmp folder for uploads (Render's temporary storage)
+    UPLOAD_FOLDER = '/tmp/uploads'
+    
+else:
+    # 💻 DEVELOPMENT MODE (on your computer)
+    print("💻 Running in DEVELOPMENT mode")
+    
+    app.config['SECRET_KEY'] = 'a-very-secret-key-that-you-should-change'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
+    UPLOAD_FOLDER = 'uploads'
 
+# Common configuration for both environments
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
+
+# Create upload folder if it doesn't exist
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
+    print(f"📁 Created upload folder: {UPLOAD_FOLDER}")
 
 # --- DATABASE & LOGIN MANAGER SETUP ---
 db = SQLAlchemy(app)

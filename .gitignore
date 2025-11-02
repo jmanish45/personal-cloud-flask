@@ -1,27 +1,44 @@
-Virtual Environment
-/venv
+# Virtual Environment
 venv/
+env/
+ENV/
 
-Python cache files
-pycache/
+# Python cache files
+__pycache__/
 *.pyc
+*.pyo
+*.pyd
 
-IDE / Editor specific files
+# IDE / Editor specific files
 .vscode/
 .idea/
+*.swp
+*.swo
 
-Instance folder (can contain sensitive config)
-/instance
+# Database files
+instance/
 database.db
+*.sqlite
+*.sqlite3
 
-Uploaded files folder
-/uploads
+# Uploaded files folder
 uploads/
 
-OS-specific files
+# Environment variables (IMPORTANT - contains secrets)
+.env
+.env.local
+.env.production
+
+# OS-specific files
 .DS_Store
 Thumbs.db
 
-# --- ADD THIS LINE ---
-# Ignore environment file containing secrets
-.env
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Build files
+dist/
+build/
+*.egg-info/
