@@ -479,6 +479,18 @@ def test_s3_list():
         print(f"❌ S3 list error: {e}")
         return f"❌ S3 list failed: {e}", 500
 
+@app.route('/migrate-add-s3-key')
+def migrate_add_s3_key():
+    """Add s3_key column to file_metadata table if it doesn't exist"""
+    try:
+        with db.engine.connect() as conn:
+            # Check if column exists before adding
+            conn.execute(db.text("ALTER TABLE file_metadata ADD COLUMN IF NOT EXISTS s3_key VARCHAR(500)"))
+            conn.commit()
+        return "✅ Migration successful: s3_key column added to file_metadata table", 200
+    except Exception as e:
+        return f"❌ Migration failed: {str(e)}", 500
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
