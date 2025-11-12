@@ -56,7 +56,7 @@ Clone the repository
 
 git clone  https://github.com/jmanish45/personal-cloud-flask.git
 cd personal-cloud-flask
-Live Link of the app : personal-cloud-flask.onrender.com
+Live Link of the app : https://personal-cloud-flask.onrender.com/
 
 
 Create a virtual environment & activate it
