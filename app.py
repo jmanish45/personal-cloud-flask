@@ -3,7 +3,7 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
-from ai_utils import analyze_file, find_semantic_matches, categorize_files_with_ai
+from ai_utils import analyze_file, find_semantic_matches, categorize_by_tags_simple
 import os
 import secrets
 import boto3
@@ -92,6 +92,8 @@ class FileMetadata(db.Model):
     filename = db.Column(db.String(300), nullable=False)
     s3_key = db.Column(db.String(500), nullable=True)  # NEW: stores S3 path
     tags = db.Column(db.String(500))
+    category = db.Column(db.String(100), nullable=True)  # Permanent category storage
+    file_size = db.Column(db.Integer, nullable=True, default=0)  # File size in bytes
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     share_token = db.Column(db.String(32), unique=True, nullable=True)
 
@@ -186,42 +188,68 @@ def index():
     # Get all files for the current user
     all_files_metadata = FileMetadata.query.filter_by(user_id=current_user.id).all()
     
+    # Calculate storage stats
+    total_files = len(all_files_metadata)
+    total_size = 0
+    
+    # Calculate total storage used
+    # Calculate storage from database (works with S3)
+    total_size = db.session.query(db.func.sum(FileMetadata.file_size)).filter_by(user_id=current_user.id).scalar() or 0
+    
+    # Format storage size
+    def format_size(size_bytes):
+        if size_bytes < 1024:
+            return f"{size_bytes} B"
+        elif size_bytes < 1024 * 1024:
+            return f"{size_bytes / 1024:.1f} KB"
+        elif size_bytes < 1024 * 1024 * 1024:
+            return f"{size_bytes / (1024 * 1024):.1f} MB"
+        else:
+            return f"{size_bytes / (1024 * 1024 * 1024):.2f} GB"
+    
+    storage_used = format_size(total_size)
+    storage_limit = "50 MB"  # Display limit
+    storage_percent = min((total_size / (50 * 1024 * 1024)) * 100, 100)  # 50MB limit for display
+    
+    # Build categories from stored category column (NO AI CALL!)
+    categorized_files = {}
+    for file_meta in all_files_metadata:
+        category = file_meta.category or "Uncategorized"
+        if category not in categorized_files:
+            categorized_files[category] = []
+        categorized_files[category].append(file_meta)
+    
+    # Count files per category for stats
+    category_stats = {cat: len(files) for cat, files in categorized_files.items()}
+    
     if folder_name:
         # Show specific folder view
         print(f"DEBUG: Viewing folder: {folder_name}")
-        
-        # Get categorized files
-        categorized_filenames = categorize_files_with_ai(all_files_metadata)
-        
-        # Get files for the specific folder
-        folder_files = []
-        if folder_name in categorized_filenames:
-            folder_files = [
-                meta for meta in all_files_metadata 
-                if meta.filename in categorized_filenames[folder_name]
-            ]
+        folder_files = categorized_files.get(folder_name, [])
         
         return render_template('index.html', 
                              viewing_folder=True,
                              folder_name=folder_name,
                              folder_files=folder_files,
-                             title=f"Files in {folder_name}")
+                             title=f"Files in {folder_name}",
+                             total_files=total_files,
+                             storage_used=storage_used,
+                             storage_limit=storage_limit,
+                             storage_percent=storage_percent,
+                             category_stats=category_stats)
     else:
         # Show main dashboard with all categorized folders
         print(f"DEBUG: Showing main dashboard with {len(all_files_metadata)} files")
         
-        categorized_filenames = categorize_files_with_ai(all_files_metadata)
-        final_categorized_files = {}
-        
-        for category, filenames in categorized_filenames.items():
-            final_categorized_files[category] = [
-                meta for meta in all_files_metadata if meta.filename in filenames
-            ]
-        
         return render_template('index.html', 
                              viewing_folder=False,
-                             categorized_files=final_categorized_files, 
-                             title="Your Smart Dashboard")
+                             categorized_files=categorized_files, 
+                             title="Your Smart Dashboard",
+                             total_files=total_files,
+                             storage_used=storage_used,
+                             storage_limit=storage_limit,
+                             storage_percent=storage_percent,
+                             category_stats=category_stats)
 
 @app.route('/search')
 @login_required
@@ -259,6 +287,9 @@ def upload_file():
     temp_path = os.path.join(user_folder, temp_filename)
     file.save(temp_path)
     
+    # Get file size
+    file_size = os.path.getsize(temp_path)
+    
     s3_key = None
     try:
         # If S3 enabled, upload to S3
@@ -273,8 +304,14 @@ def upload_file():
             )
             print(f"✅ File uploaded to S3: {s3_key}")
         
-        # Analyze file with AI (from local temp copy)
-        tags = analyze_file(temp_path)
+        # Analyze file with AI (from local temp copy) - returns {tags, category}
+        analysis_result = analyze_file(temp_path)
+        tags = analysis_result.get('tags') if analysis_result else None
+        category = analysis_result.get('category', 'Uncategorized') if analysis_result else 'Uncategorized'
+        
+        print(f"📦 Saving file: {file.filename}")
+        print(f"   Tags: {tags}")
+        print(f"   Category: {category}")
         
         # Save metadata
         existing_metadata = FileMetadata.query.filter_by(
@@ -287,11 +324,15 @@ def upload_file():
                 filename=file.filename,
                 s3_key=s3_key,  # Store S3 key
                 tags=','.join(tags) if tags else '',
+                category=category,  # Store category permanently
+                file_size=file_size,  # Store file size
                 user_id=current_user.id
             )
             db.session.add(new_metadata)
         else:
             existing_metadata.tags = ','.join(tags) if tags else existing_metadata.tags
+            existing_metadata.category = category  # Update category
+            existing_metadata.file_size = file_size  # Update file size
             if s3_key:
                 existing_metadata.s3_key = s3_key
         
@@ -302,9 +343,17 @@ def upload_file():
         print(f"❌ Upload error: {e}")
         flash(f'Upload failed: {str(e)}', 'error')
     finally:
-        # Clean up temp file
-        if os.path.exists(temp_path):
-            os.remove(temp_path)
+        # Clean up temp file with retry (file may be locked)
+        import gc
+        gc.collect()  # Force garbage collection to release file handles
+        import time
+        for attempt in range(3):
+            try:
+                if os.path.exists(temp_path):
+                    os.remove(temp_path)
+                break
+            except PermissionError:
+                time.sleep(0.5)  # Wait and retry
     
     return redirect(url_for('index'))
 
@@ -484,12 +533,73 @@ def migrate_add_s3_key():
     """Add s3_key column to file_metadata table if it doesn't exist"""
     try:
         with db.engine.connect() as conn:
-            # Check if column exists before adding
-            conn.execute(db.text("ALTER TABLE file_metadata ADD COLUMN IF NOT EXISTS s3_key VARCHAR(500)"))
-            conn.commit()
+            # SQLite doesn't support IF NOT EXISTS, so try-catch
+            try:
+                conn.execute(db.text("ALTER TABLE file_metadata ADD COLUMN s3_key VARCHAR(500)"))
+                conn.commit()
+            except Exception:
+                return "✅ s3_key column already exists", 200
         return "✅ Migration successful: s3_key column added to file_metadata table", 200
     except Exception as e:
         return f"❌ Migration failed: {str(e)}", 500
+
+
+@app.route('/migrate-add-category')
+def migrate_add_category():
+    """Add category column to file_metadata table if it doesn't exist"""
+    try:
+        with db.engine.connect() as conn:
+            # SQLite doesn't support IF NOT EXISTS, so try-catch
+            try:
+                conn.execute(db.text("ALTER TABLE file_metadata ADD COLUMN category VARCHAR(100)"))
+                conn.commit()
+            except Exception:
+                return "✅ category column already exists", 200
+        return "✅ Migration successful: category column added to file_metadata table", 200
+    except Exception as e:
+        return f"❌ Migration failed: {str(e)}", 500
+
+
+@app.route('/migrate-add-filesize')
+def migrate_add_filesize():
+    """Add file_size column to file_metadata table if it doesn't exist"""
+    try:
+        with db.engine.connect() as conn:
+            try:
+                conn.execute(db.text("ALTER TABLE file_metadata ADD COLUMN file_size INTEGER DEFAULT 0"))
+                conn.commit()
+            except Exception:
+                return "✅ file_size column already exists", 200
+        return "✅ Migration successful: file_size column added to file_metadata table", 200
+    except Exception as e:
+        return f"❌ Migration failed: {str(e)}", 500
+
+
+@app.route('/migrate-categories')
+@login_required
+def migrate_categories():
+    """Assign categories to files that don't have one (based on existing tags)"""
+    try:
+        # Get all files without a category for current user
+        files_without_category = FileMetadata.query.filter_by(user_id=current_user.id).filter(
+            (FileMetadata.category == None) | (FileMetadata.category == '')
+        ).all()
+        
+        if not files_without_category:
+            return "✅ All files already have categories assigned!", 200
+        
+        updated_count = 0
+        for file_meta in files_without_category:
+            # Use simple rule-based categorization from existing tags
+            category = categorize_by_tags_simple(file_meta.tags)
+            file_meta.category = category
+            updated_count += 1
+        
+        db.session.commit()
+        return f"✅ Migration successful! Assigned categories to {updated_count} files.", 200
+    except Exception as e:
+        return f"❌ Migration failed: {str(e)}", 500
+
 
 if __name__ == '__main__':
     with app.app_context():

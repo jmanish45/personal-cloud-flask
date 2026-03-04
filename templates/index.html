@@ -5,35 +5,60 @@
 {% block content %}
 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     
-    <!-- Page Header -->
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ title }}</h1>
-        <p class="text-gray-600">AI-powered organization for your files</p>
+    <!-- Page Header with Storage Stats -->
+    <div class="mb-8 flex items-center justify-between">
+        <div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ title }}</h1>
+            <p class="text-gray-600">AI-powered organization for your files</p>
+        </div>
+        
+        <!-- Compact Circular Storage Indicator -->
+        <div class="flex items-center gap-3">
+            <div class="relative w-14 h-14">
+                <svg class="w-14 h-14 transform -rotate-90" viewBox="0 0 36 36">
+                    <!-- Background circle -->
+                    <circle cx="18" cy="18" r="15.5" fill="none" stroke="#e5e7eb" stroke-width="3"></circle>
+                    <!-- Progress circle -->
+                    <circle cx="18" cy="18" r="15.5" fill="none" stroke="url(#storageGradient)" stroke-width="3" 
+                            stroke-dasharray="97.4" stroke-dashoffset="{{ 97.4 - (storage_percent|default(0) * 0.974) }}"
+                            stroke-linecap="round"></circle>
+                    <defs>
+                        <linearGradient id="storageGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                            <stop offset="0%" style="stop-color:#3b82f6"/>
+                            <stop offset="100%" style="stop-color:#8b5cf6"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+                <div class="absolute inset-0 flex items-center justify-center">
+                    <span class="text-xs font-semibold text-gray-700">{{ storage_percent|default(0)|round|int }}%</span>
+                </div>
+            </div>
+            <div class="text-sm">
+                <div class="font-medium text-gray-900">{{ storage_used|default('0 B') }}</div>
+                <div class="text-gray-500">of 50 MB</div>
+            </div>
+        </div>
     </div>
 
-    <!-- Upload Section -->
+    <!-- Upload Section with Drag & Drop -->
     <div class="mb-8">
-        <div class="bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl p-8 shadow-xl">
-            <form action="/upload" method="post" enctype="multipart/form-data" class="space-y-4">
+        <div id="dropZone" class="bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl p-8 shadow-xl transition-all duration-300 border-4 border-transparent">
+            <form action="/upload" method="post" enctype="multipart/form-data" id="uploadForm" class="space-y-4">
                 <div class="text-center">
-                    <div class="inline-flex items-center justify-center w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full mb-4">
+                    <div id="uploadIcon" class="inline-flex items-center justify-center w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full mb-4 transition-transform duration-300">
                         <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                         </svg>
                     </div>
-                    <h3 class="text-xl font-bold text-white mb-2">Upload Your Files</h3>
-                    <p class="text-blue-100 mb-6">AI will automatically analyze and categorize them</p>
+                    <h3 id="uploadTitle" class="text-xl font-bold text-white mb-2">Drag & Drop Files Here</h3>
+                    <p id="uploadSubtitle" class="text-blue-100 mb-6">or click to browse • AI will automatically analyze and categorize</p>
                 </div>
                 
+                <!-- Hidden file input -->
+                <input type="file" name="file" class="hidden" id="fileInput" onchange="handleFileSelect(this)">
+                
                 <div class="flex flex-col sm:flex-row gap-4 items-center justify-center">
-                    <label class="cursor-pointer">
-                        <input 
-                            type="file" 
-                            name="file" 
-                            class="hidden" 
-                            id="fileInput"
-                            onchange="updateFileName(this)"
-                        >
+                    <label for="fileInput" class="cursor-pointer">
                         <span class="inline-flex items-center px-6 py-3 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-all shadow-lg">
                             <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13"></path>
@@ -41,17 +66,21 @@
                             Choose File
                         </span>
                     </label>
-                    <span id="fileName" class="text-white text-sm">No file selected</span>
-                    <button 
-                        type="submit" 
-                        class="px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-all shadow-lg"
-                    >
-                        Upload
+                    <span id="fileName" class="text-white text-sm font-medium px-4 py-2 bg-white/20 rounded-lg backdrop-blur-sm">No file selected</span>
+                    <button type="submit" id="uploadBtn" class="px-6 py-3 bg-green-500 hover:bg-green-600 text-white font-semibold rounded-lg transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                        <span id="uploadBtnText">Upload</span>
+                        <span id="uploadSpinner" class="hidden">
+                            <svg class="animate-spin h-5 w-5 inline" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Analyzing...
+                        </span>
                     </button>
                 </div>
                 
                 <p class="text-center text-blue-100 text-sm">
-                    Supports: PDF, Images (JPG, PNG), DOCX • Max: 50MB
+                    Supports: PDF, Images (JPG, PNG, GIF), DOCX, TXT, Code files • Max: 16MB
                 </p>
             </form>
         </div>
@@ -126,32 +155,44 @@
                 <!-- Grid View -->
                 <div class="grid-view grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                     {% for file_meta in files %}
-                    <div class="bg-white rounded-xl border-2 border-gray-200 hover:border-blue-400 hover:shadow-xl transition-all duration-200 group">
+                    <div class="bg-white rounded-xl border-2 border-gray-200 hover:border-blue-400 hover:shadow-xl transition-all duration-200 group overflow-hidden">
                         <!-- File Icon/Preview -->
-                        <div class="p-6 flex flex-col items-center">
-                            <div class="w-20 h-20 mb-4 flex items-center justify-center">
-                                {% if file_meta.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')) %}
-                                <svg class="w-full h-full text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                </svg>
+                        <div class="p-4 flex flex-col items-center w-full">
+                            <!-- Image Preview or Icon -->
+                            <div class="w-full h-32 mb-4 flex items-center justify-center overflow-hidden rounded-lg bg-gray-50 cursor-pointer" onclick="openPreview('{{ file_meta.filename }}', '{% if file_meta.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')) %}image{% elif file_meta.filename.lower().endswith('.pdf') %}pdf{% else %}file{% endif %}')">
+                                {% if file_meta.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')) %}
+                                <!-- Actual Image Thumbnail -->
+                                <img src="/uploads/{{ file_meta.filename }}" alt="{{ file_meta.filename }}" class="max-w-full max-h-full object-contain hover:scale-105 transition-transform duration-200" loading="lazy" onerror="this.onerror=null; this.parentElement.innerHTML='<svg class=\'w-16 h-16 text-blue-500\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'1.5\' d=\'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z\'></path></svg>';">
                                 {% elif file_meta.filename.lower().endswith('.pdf') %}
-                                <svg class="w-full h-full text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-16 h-16 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
                                 </svg>
                                 {% elif file_meta.filename.lower().endswith('.docx') %}
-                                <svg class="w-full h-full text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-16 h-16 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
                                 </svg>
+                                {% elif file_meta.filename.lower().endswith(('.mp3', '.wav', '.m4a', '.flac')) %}
+                                <svg class="w-16 h-16 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path>
+                                </svg>
+                                {% elif file_meta.filename.lower().endswith(('.mp4', '.avi', '.mkv', '.mov')) %}
+                                <svg class="w-16 h-16 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path>
+                                </svg>
+                                {% elif file_meta.filename.lower().endswith(('.zip', '.rar', '.7z', '.tar', '.gz')) %}
+                                <svg class="w-16 h-16 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"></path>
+                                </svg>
                                 {% else %}
-                                <svg class="w-full h-full text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <svg class="w-16 h-16 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
                                 </svg>
                                 {% endif %}
                             </div>
                             
                             <!-- File Name -->
-                            <a href="/uploads/{{ file_meta.filename }}" target="_blank" class="text-center mb-3 hover:text-blue-600 transition-colors">
-                                <h4 class="font-semibold text-gray-900 text-sm line-clamp-2 mb-1">{{ file_meta.filename }}</h4>
+                            <a href="/uploads/{{ file_meta.filename }}" target="_blank" class="text-center mb-3 hover:text-blue-600 transition-colors w-full px-2 overflow-hidden">
+                                <h4 class="font-semibold text-gray-900 text-sm mb-1 break-all" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;" title="{{ file_meta.filename }}">{{ file_meta.filename }}</h4>
                             </a>
                             
                             <!-- Tags -->
@@ -201,19 +242,21 @@
                     {% for file_meta in files %}
                     <div class="bg-white rounded-lg border border-gray-200 hover:border-blue-400 hover:shadow-md transition-all p-4">
                         <div class="flex items-center justify-between">
-                            <div class="flex items-center flex-1 min-w-0">
-                                <!-- Icon -->
-                                <div class="flex-shrink-0 w-10 h-10 mr-4">
-                                    {% if file_meta.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')) %}
-                                    <svg class="w-full h-full text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                    </svg>
+                            <div class="flex items-center flex-1 min-w-0 cursor-pointer" onclick="openPreview('{{ file_meta.filename }}', '{% if file_meta.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')) %}image{% elif file_meta.filename.lower().endswith('.pdf') %}pdf{% else %}file{% endif %}')">
+                                <!-- Thumbnail/Icon -->
+                                <div class="flex-shrink-0 w-12 h-12 mr-4 rounded-lg overflow-hidden bg-gray-100 flex items-center justify-center">
+                                    {% if file_meta.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')) %}
+                                    <img src="/uploads/{{ file_meta.filename }}" alt="{{ file_meta.filename }}" class="w-full h-full object-cover" loading="lazy" onerror="this.onerror=null; this.parentElement.innerHTML='<svg class=\'w-6 h-6 text-blue-500\' fill=\'none\' stroke=\'currentColor\' viewBox=\'0 0 24 24\'><path stroke-linecap=\'round\' stroke-linejoin=\'round\' stroke-width=\'2\' d=\'M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z\'></path></svg>';">
                                     {% elif file_meta.filename.lower().endswith('.pdf') %}
-                                    <svg class="w-full h-full text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
                                     </svg>
+                                    {% elif file_meta.filename.lower().endswith('.docx') %}
+                                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                    </svg>
                                     {% else %}
-                                    <svg class="w-full h-full text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
                                     </svg>
                                     {% endif %}
@@ -221,9 +264,9 @@
                                 
                                 <!-- File Info -->
                                 <div class="flex-1 min-w-0">
-                                    <a href="/uploads/{{ file_meta.filename }}" target="_blank" class="font-semibold text-gray-900 hover:text-blue-600 block truncate">
+                                    <span class="font-semibold text-gray-900 hover:text-blue-600 block truncate">
                                         {{ file_meta.filename }}
-                                    </a>
+                                    </span>
                                     <div class="flex flex-wrap gap-1 mt-1">
                                         {% for tag in file_meta.tags.split(',')[:5] %}
                                         <span class="px-2 py-0.5 bg-gray-100 text-gray-600 text-xs rounded-full">
@@ -236,12 +279,12 @@
                             
                             <!-- Actions -->
                             <div class="flex items-center gap-2 ml-4">
-                                <a href="/uploads/{{ file_meta.filename }}" target="_blank" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="View">
+                                <button onclick="openPreview('{{ file_meta.filename }}', '{% if file_meta.filename.lower().endswith(('.png', '.jpg', '.jpeg', '.gif', '.webp')) %}image{% elif file_meta.filename.lower().endswith('.pdf') %}pdf{% else %}file{% endif %}')" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Preview">
                                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                                     </svg>
-                                </a>
+                                </button>
                                 <form action="/share/{{ file_meta.id }}" method="post" class="inline">
                                     <button type="submit" class="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors" title="Share">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -295,13 +338,103 @@
 </style>
 
 <script>
-    // File name display function
-    function updateFileName(input) {
-        const fileName = input.files[0]?.name || 'No file selected';
-        document.getElementById('fileName').textContent = fileName;
+    // ===== FILE SELECT & UPLOAD HANDLING =====
+    function handleFileSelect(input) {
+        const file = input.files[0];
+        if (file) {
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('uploadBtn').disabled = false;
+        } else {
+            document.getElementById('fileName').textContent = 'No file selected';
+            document.getElementById('uploadBtn').disabled = true;
+        }
     }
 
-    // View toggle function
+    // ===== DRAG AND DROP =====
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const uploadForm = document.getElementById('uploadForm');
+
+    // Prevent default drag behaviors
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, preventDefaults, false);
+        document.body.addEventListener(eventName, preventDefaults, false);
+    });
+
+    function preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    // Highlight drop zone when dragging over
+    ['dragenter', 'dragover'].forEach(eventName => {
+        dropZone.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, unhighlight, false);
+    });
+
+    function highlight(e) {
+        dropZone.classList.add('border-white', 'border-dashed', 'bg-blue-600');
+        dropZone.classList.remove('border-transparent');
+        document.getElementById('uploadIcon').classList.add('scale-125');
+        document.getElementById('uploadTitle').textContent = 'Drop your file here!';
+        document.getElementById('uploadSubtitle').textContent = 'Release to upload';
+    }
+
+    function unhighlight(e) {
+        dropZone.classList.remove('border-white', 'border-dashed', 'bg-blue-600');
+        dropZone.classList.add('border-transparent');
+        document.getElementById('uploadIcon').classList.remove('scale-125');
+        document.getElementById('uploadTitle').textContent = 'Drag & Drop Files Here';
+        document.getElementById('uploadSubtitle').textContent = 'or click to browse • AI will automatically analyze and categorize';
+    }
+
+    // Handle dropped files
+    dropZone.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        
+        if (files.length > 0) {
+            fileInput.files = files;
+            handleFileSelect(fileInput);
+            
+            // Auto-submit after drop (optional - you can remove this for manual submit)
+            // uploadForm.submit();
+        }
+    }
+
+    // Click anywhere on drop zone to open file dialog
+    dropZone.addEventListener('click', function(e) {
+        if (e.target.tagName !== 'BUTTON' && e.target.tagName !== 'INPUT' && !e.target.closest('button') && !e.target.closest('label')) {
+            fileInput.click();
+        }
+    });
+
+    // ===== UPLOAD WITH LOADING STATE =====
+    uploadForm.addEventListener('submit', function(e) {
+        const btn = document.getElementById('uploadBtn');
+        const btnText = document.getElementById('uploadBtnText');
+        const spinner = document.getElementById('uploadSpinner');
+        
+        if (!fileInput.files[0]) {
+            e.preventDefault();
+            alert('Please select a file first');
+            return;
+        }
+        
+        // Show loading state
+        btnText.classList.add('hidden');
+        spinner.classList.remove('hidden');
+        btn.disabled = true;
+        document.getElementById('uploadTitle').textContent = 'Uploading & Analyzing...';
+        document.getElementById('uploadSubtitle').textContent = 'AI is processing your file, please wait';
+    });
+
+    // ===== VIEW TOGGLE =====
     function toggleView(view) {
         const gridViews = document.querySelectorAll('.grid-view');
         const listViews = document.querySelectorAll('.list-view');
@@ -325,6 +458,90 @@
     document.addEventListener('DOMContentLoaded', function() {
         toggleView('grid');
     });
+
+    // ===== PREVIEW MODAL =====
+    function openPreview(filename, type) {
+        const modal = document.getElementById('previewModal');
+        const previewContent = document.getElementById('previewContent');
+        const previewTitle = document.getElementById('previewTitle');
+        const downloadLink = document.getElementById('previewDownload');
+        
+        previewTitle.textContent = filename;
+        downloadLink.href = '/uploads/' + encodeURIComponent(filename);
+        
+        let content = '';
+        if (type === 'image') {
+            content = `<img src="/uploads/${encodeURIComponent(filename)}" alt="${filename}" class="max-w-full max-h-[70vh] object-contain rounded-lg shadow-lg">`;
+        } else if (type === 'pdf') {
+            content = `<iframe src="/uploads/${encodeURIComponent(filename)}" class="w-full h-[70vh] rounded-lg border" frameborder="0"></iframe>`;
+        } else {
+            content = `
+                <div class="text-center py-12">
+                    <svg class="w-24 h-24 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path>
+                    </svg>
+                    <p class="text-gray-600 mb-4">Preview not available for this file type</p>
+                    <a href="/uploads/${encodeURIComponent(filename)}" target="_blank" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        Download File
+                    </a>
+                </div>
+            `;
+        }
+        
+        previewContent.innerHTML = content;
+        modal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closePreview() {
+        const modal = document.getElementById('previewModal');
+        modal.classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    }
+
+    // Close modal on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closePreview();
+        }
+    });
 </script>
+
+<!-- Preview Modal -->
+<div id="previewModal" class="hidden fixed inset-0 z-50 overflow-y-auto">
+    <!-- Backdrop -->
+    <div class="fixed inset-0 bg-black bg-opacity-75 transition-opacity" onclick="closePreview()"></div>
+    
+    <!-- Modal Content -->
+    <div class="flex min-h-full items-center justify-center p-4">
+        <div class="relative bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] overflow-hidden">
+            <!-- Header -->
+            <div class="flex items-center justify-between px-6 py-4 border-b bg-gray-50">
+                <h3 id="previewTitle" class="text-lg font-semibold text-gray-900 truncate max-w-md"></h3>
+                <div class="flex items-center gap-3">
+                    <a id="previewDownload" href="#" target="_blank" class="inline-flex items-center px-3 py-2 text-sm font-medium text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        Download
+                    </a>
+                    <button onclick="closePreview()" class="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Preview Content -->
+            <div id="previewContent" class="p-6 flex items-center justify-center bg-gray-100 min-h-[300px]">
+                <!-- Content will be inserted here -->
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}
 {% endblock %}
