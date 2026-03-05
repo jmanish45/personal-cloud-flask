@@ -546,6 +546,34 @@ def migrate_fix_password_column():
     except Exception as e:
         return f"❌ Migration failed: {str(e)}", 500
 
+@app.route('/migrate-all')
+def migrate_all():
+    """Run ALL database migrations at once. Safe to run multiple times."""
+    results = []
+    
+    migrations = [
+        ("password VARCHAR(512)", 'ALTER TABLE "user" ALTER COLUMN password TYPE VARCHAR(512)'),
+        ("s3_key column", "ALTER TABLE file_metadata ADD COLUMN s3_key VARCHAR(500)"),
+        ("category column", "ALTER TABLE file_metadata ADD COLUMN category VARCHAR(100)"),
+        ("file_size column", "ALTER TABLE file_metadata ADD COLUMN file_size INTEGER DEFAULT 0"),
+        ("share_token column", "ALTER TABLE file_metadata ADD COLUMN share_token VARCHAR(32)"),
+    ]
+    
+    with db.engine.connect() as conn:
+        for name, sql in migrations:
+            try:
+                conn.execute(db.text(sql))
+                conn.commit()
+                results.append(f"✅ {name}: added successfully")
+            except Exception as e:
+                conn.rollback()
+                if 'already exists' in str(e).lower() or 'duplicate column' in str(e).lower():
+                    results.append(f"✅ {name}: already exists (skipped)")
+                else:
+                    results.append(f"⚠️ {name}: {str(e)}")
+    
+    return "<pre>" + "\n".join(results) + "</pre>", 200
+
 @app.route('/migrate-add-s3-key')
 def migrate_add_s3_key():
     """Add s3_key column to file_metadata table if it doesn't exist"""
@@ -563,7 +591,6 @@ def migrate_add_s3_key():
 
 
 @app.route('/migrate-add-category')
-@login_required
 def migrate_add_category():
     """Add category column to file_metadata table if it doesn't exist"""
     try:
@@ -580,7 +607,6 @@ def migrate_add_category():
 
 
 @app.route('/migrate-add-filesize')
-@login_required
 def migrate_add_filesize():
     """Add file_size column to file_metadata table if it doesn't exist"""
     try:
