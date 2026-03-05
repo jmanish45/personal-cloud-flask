@@ -182,74 +182,80 @@ def logout():
 @app.route('/')
 @login_required
 def index():
-    # Check if we're viewing a specific folder
-    folder_name = request.args.get('folder')
-    
-    # Get all files for the current user
-    all_files_metadata = FileMetadata.query.filter_by(user_id=current_user.id).all()
-    
-    # Calculate storage stats
-    total_files = len(all_files_metadata)
-    total_size = 0
-    
-    # Calculate total storage used
-    # Calculate storage from database (works with S3)
-    total_size = db.session.query(db.func.sum(FileMetadata.file_size)).filter_by(user_id=current_user.id).scalar() or 0
-    
-    # Format storage size
-    def format_size(size_bytes):
-        if size_bytes < 1024:
-            return f"{size_bytes} B"
-        elif size_bytes < 1024 * 1024:
-            return f"{size_bytes / 1024:.1f} KB"
-        elif size_bytes < 1024 * 1024 * 1024:
-            return f"{size_bytes / (1024 * 1024):.1f} MB"
+    try:
+        # Check if we're viewing a specific folder
+        folder_name = request.args.get('folder')
+        
+        # Get all files for the current user
+        all_files_metadata = FileMetadata.query.filter_by(user_id=current_user.id).all()
+        
+        # Calculate storage stats
+        total_files = len(all_files_metadata)
+        total_size = 0
+        
+        # Calculate total storage used
+        # Calculate storage from database (works with S3)
+        total_size = db.session.query(db.func.sum(FileMetadata.file_size)).filter_by(user_id=current_user.id).scalar() or 0
+        
+        # Format storage size
+        def format_size(size_bytes):
+            if size_bytes < 1024:
+                return f"{size_bytes} B"
+            elif size_bytes < 1024 * 1024:
+                return f"{size_bytes / 1024:.1f} KB"
+            elif size_bytes < 1024 * 1024 * 1024:
+                return f"{size_bytes / (1024 * 1024):.1f} MB"
+            else:
+                return f"{size_bytes / (1024 * 1024 * 1024):.2f} GB"
+        
+        storage_used = format_size(total_size)
+        storage_limit = "50 MB"  # Display limit
+        storage_percent = min((total_size / (50 * 1024 * 1024)) * 100, 100)  # 50MB limit for display
+        
+        # Build categories from stored category column (NO AI CALL!)
+        categorized_files = {}
+        for file_meta in all_files_metadata:
+            category = file_meta.category or "Uncategorized"
+            if category not in categorized_files:
+                categorized_files[category] = []
+            categorized_files[category].append(file_meta)
+        
+        # Count files per category for stats
+        category_stats = {cat: len(files) for cat, files in categorized_files.items()}
+        
+        if folder_name:
+            # Show specific folder view
+            print(f"DEBUG: Viewing folder: {folder_name}")
+            folder_files = categorized_files.get(folder_name, [])
+            
+            return render_template('index.html', 
+                                 viewing_folder=True,
+                                 folder_name=folder_name,
+                                 folder_files=folder_files,
+                                 title=f"Files in {folder_name}",
+                                 total_files=total_files,
+                                 storage_used=storage_used,
+                                 storage_limit=storage_limit,
+                                 storage_percent=storage_percent,
+                                 category_stats=category_stats)
         else:
-            return f"{size_bytes / (1024 * 1024 * 1024):.2f} GB"
-    
-    storage_used = format_size(total_size)
-    storage_limit = "50 MB"  # Display limit
-    storage_percent = min((total_size / (50 * 1024 * 1024)) * 100, 100)  # 50MB limit for display
-    
-    # Build categories from stored category column (NO AI CALL!)
-    categorized_files = {}
-    for file_meta in all_files_metadata:
-        category = file_meta.category or "Uncategorized"
-        if category not in categorized_files:
-            categorized_files[category] = []
-        categorized_files[category].append(file_meta)
-    
-    # Count files per category for stats
-    category_stats = {cat: len(files) for cat, files in categorized_files.items()}
-    
-    if folder_name:
-        # Show specific folder view
-        print(f"DEBUG: Viewing folder: {folder_name}")
-        folder_files = categorized_files.get(folder_name, [])
-        
-        return render_template('index.html', 
-                             viewing_folder=True,
-                             folder_name=folder_name,
-                             folder_files=folder_files,
-                             title=f"Files in {folder_name}",
-                             total_files=total_files,
-                             storage_used=storage_used,
-                             storage_limit=storage_limit,
-                             storage_percent=storage_percent,
-                             category_stats=category_stats)
-    else:
-        # Show main dashboard with all categorized folders
-        print(f"DEBUG: Showing main dashboard with {len(all_files_metadata)} files")
-        
-        return render_template('index.html', 
-                             viewing_folder=False,
-                             categorized_files=categorized_files, 
-                             title="Your Smart Dashboard",
-                             total_files=total_files,
-                             storage_used=storage_used,
-                             storage_limit=storage_limit,
-                             storage_percent=storage_percent,
-                             category_stats=category_stats)
+            # Show main dashboard with all categorized folders
+            print(f"DEBUG: Showing main dashboard with {len(all_files_metadata)} files")
+            
+            return render_template('index.html', 
+                                 viewing_folder=False,
+                                 categorized_files=categorized_files, 
+                                 title="Your Smart Dashboard",
+                                 total_files=total_files,
+                                 storage_used=storage_used,
+                                 storage_limit=storage_limit,
+                                 storage_percent=storage_percent,
+                                 category_stats=category_stats)
+    except Exception as e:
+        import traceback
+        error_trace = traceback.format_exc()
+        print(f"❌ INDEX ROUTE ERROR: {error_trace}")
+        return f"<pre>Error in index route:\n{error_trace}</pre>", 500
 
 @app.route('/search')
 @login_required
