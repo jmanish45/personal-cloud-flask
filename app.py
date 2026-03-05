@@ -84,7 +84,7 @@ login_manager.login_view = 'login'
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
-    password = db.Column(db.String(256), nullable=False)  # Increased for modern hash lengths
+    password = db.Column(db.String(512), nullable=False)  # Must be 512+ to fit pbkdf2:sha256 hashes on PostgreSQL
     files = db.relationship('FileMetadata', backref='owner', lazy=True)
 
 class FileMetadata(db.Model):
@@ -465,6 +465,7 @@ def health_check():
     return {'status': 'healthy', 'message': 'Personal Cloud API is running'}
 
 @app.route('/init-db')
+@login_required
 def init_database():
     """Initialize database tables - run this once after deployment"""
     try:
@@ -528,6 +529,17 @@ def test_s3_list():
         print(f"❌ S3 list error: {e}")
         return f"❌ S3 list failed: {e}", 500
 
+@app.route('/migrate-fix-password-column')
+def migrate_fix_password_column():
+    """Widen password column to 512 chars to fix hash truncation on PostgreSQL"""
+    try:
+        with db.engine.connect() as conn:
+            conn.execute(db.text('ALTER TABLE "user" ALTER COLUMN password TYPE VARCHAR(512)'))
+            conn.commit()
+        return "✅ Password column widened to 512 chars. Existing users with truncated hashes must re-register.", 200
+    except Exception as e:
+        return f"❌ Migration failed: {str(e)}", 500
+
 @app.route('/migrate-add-s3-key')
 def migrate_add_s3_key():
     """Add s3_key column to file_metadata table if it doesn't exist"""
@@ -545,6 +557,7 @@ def migrate_add_s3_key():
 
 
 @app.route('/migrate-add-category')
+@login_required
 def migrate_add_category():
     """Add category column to file_metadata table if it doesn't exist"""
     try:
@@ -561,6 +574,7 @@ def migrate_add_category():
 
 
 @app.route('/migrate-add-filesize')
+@login_required
 def migrate_add_filesize():
     """Add file_size column to file_metadata table if it doesn't exist"""
     try:
