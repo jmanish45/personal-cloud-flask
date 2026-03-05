@@ -10,20 +10,21 @@ load_dotenv()
 
 # --- DIAGNOSTIC: Check if the key is loaded ---
 api_key = os.getenv("GEMINI_API_KEY")
+model = None  # Initialize as None
+
 if not api_key:
-    print("🔴 CRITICAL ERROR: GEMINI_API_KEY not found in .env file.")
+    print("⚠️ WARNING: GEMINI_API_KEY not found. AI features will be disabled.")
 else:
     print("✅ SUCCESS: Gemini API key loaded.")
-
-# Configure the Gemini API
-try:
-    genai.configure(api_key=api_key)
-    # Use the stable, versioned model name
-    model = genai.GenerativeModel('gemini-2.5-flash')
-    print(f"✅ SUCCESS: Gemini model '{model.model_name}' initialized.")
-except Exception as e:
-    print(f"🔴 CRITICAL ERROR: Failed to configure Gemini. Error: {e}")
-    model = None
+    # Configure the Gemini API only if key exists
+    try:
+        genai.configure(api_key=api_key)
+        # Use the stable, versioned model name
+        model = genai.GenerativeModel('gemini-2.5-flash')
+        print(f"✅ SUCCESS: Gemini model '{model.model_name}' initialized.")
+    except Exception as e:
+        print(f"⚠️ WARNING: Failed to configure Gemini. Error: {e}")
+        model = None
 
 
 def analyze_file(file_path):

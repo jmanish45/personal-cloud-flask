@@ -84,7 +84,7 @@ login_manager.login_view = 'login'
 class User(UserMixin, db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(150), unique=True, nullable=False)
-    password = db.Column(db.String(150), nullable=False)
+    password = db.Column(db.String(256), nullable=False)  # Increased for modern hash lengths
     files = db.relationship('FileMetadata', backref='owner', lazy=True)
 
 class FileMetadata(db.Model):
@@ -604,8 +604,13 @@ def migrate_categories():
 # --- DATABASE INITIALIZATION ---
 # This runs for BOTH Gunicorn (production) and direct execution (development)
 with app.app_context():
-    db.create_all()
-    print("✅ Database tables created!")
+    try:
+        db.create_all()
+        print("✅ Database tables created!")
+    except Exception as e:
+        print(f"⚠️ Database initialization error: {e}")
+        # Re-raise to prevent app from running with broken database
+        raise
 
 if __name__ == '__main__':
     app.run(debug=True)
