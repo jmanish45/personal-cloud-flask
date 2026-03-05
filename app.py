@@ -601,8 +601,11 @@ def migrate_categories():
         return f"❌ Migration failed: {str(e)}", 500
 
 
+# --- DATABASE INITIALIZATION ---
+# This runs for BOTH Gunicorn (production) and direct execution (development)
+with app.app_context():
+    db.create_all()
+    print("✅ Database tables created!")
+
 if __name__ == '__main__':
-    with app.app_context():
-        db.create_all()
-        print("✅ Database tables created!")
     app.run(debug=True)
