@@ -647,6 +647,35 @@ def migrate_categories():
         return f"❌ Migration failed: {str(e)}", 500
 
 
+@app.route('/recategorize-all')
+def recategorize_all():
+    """Re-categorize ALL files using improved tag-based logic. Updates every file's category."""
+    try:
+        all_files = FileMetadata.query.all()
+        
+        if not all_files:
+            return "✅ No files found to recategorize!", 200
+        
+        results = []
+        updated_count = 0
+        for file_meta in all_files:
+            old_category = file_meta.category or "None"
+            new_category = categorize_by_tags_simple(file_meta.tags)
+            file_meta.category = new_category
+            updated_count += 1
+            if old_category != new_category:
+                results.append(f"🔄 {file_meta.filename}: {old_category} → {new_category} (tags: {file_meta.tags})")
+            else:
+                results.append(f"✅ {file_meta.filename}: {old_category} (unchanged)")
+        
+        db.session.commit()
+        
+        summary = f"✅ Recategorization complete! Updated {updated_count} files.\n\n"
+        return "<pre>" + summary + "\n".join(results) + "</pre>", 200
+    except Exception as e:
+        return f"❌ Recategorization failed: {str(e)}", 500
+
+
 # --- DATABASE INITIALIZATION ---
 # This runs for BOTH Gunicorn (production) and direct execution (development)
 with app.app_context():

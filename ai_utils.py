@@ -59,16 +59,22 @@ TAG GUIDELINES:
 - If it's a screenshot, identify the app/website
 - If it contains text, include key words from that text
 
-CATEGORY OPTIONS (choose the MOST appropriate ONE):
-- Photos: Personal photos, selfies, travel photos, family photos, nature shots, memories
-- Screenshots: App screenshots, social media, conversations, error messages
+CATEGORY OPTIONS (choose the MOST appropriate ONE based on image CONTENT, not file type):
+- Sports: Sports-related images — athletes, matches, teams, trophies, stadiums, fitness
+- Travel & Nature: Travel photos, landscapes, nature, scenery, landmarks, vacation spots
+- Food & Recipes: Food photos, cooking, meals, restaurants, recipes, beverages
+- People & Selfies: Selfies, portraits, group photos, family photos, friends
+- Celebrations: Birthdays, festivals, parties, weddings, ceremonies, events
+- Animals & Pets: Pet photos, wildlife, animal images
+- Fashion & Lifestyle: Clothing, outfits, fashion, lifestyle, accessories
+- Vehicles: Cars, bikes, motorcycles, vehicles, automotive
+- Technology: Gadgets, tech products, electronics, programming screenshots
+- Screenshots: App screenshots, social media posts, conversations, error messages
+- Memes & Entertainment: Funny images, memes, entertainment content, movie/TV
 - Documents: Scanned documents, ID cards, certificates, forms, official papers
 - Study Materials: Notes, diagrams, educational content, textbook pages, formulas
-- Receipts: Bills, invoices, payment confirmations, shopping receipts
-- Memes & Entertainment: Funny images, memes, entertainment content
-- Work: Professional content, presentations, business materials, work-related
-- Art & Design: Artwork, designs, creative content, graphics
-- Personal: Personal items, diary entries, private content
+- Art & Design: Artwork, designs, creative content, graphics, illustrations
+- Work & Business: Professional content, presentations, business materials
 - Other: Anything that doesn't fit above categories
 
 RESPOND IN THIS EXACT FORMAT (no extra text):
@@ -313,18 +319,22 @@ def _parse_ai_response(response_text, file_type):
         
         # Comprehensive list of valid categories
         valid_categories = [
-            # Image categories
-            "Photos", "Screenshots", "Memes & Entertainment", "Art & Design",
+            # Content-specific image categories
+            "Sports", "Travel & Nature", "Food & Recipes", "People & Selfies",
+            "Celebrations", "Animals & Pets", "Fashion & Lifestyle", "Vehicles",
+            "Technology", "Screenshots", "Memes & Entertainment", "Art & Design",
             # Document categories  
             "Documents", "Study Materials", "Receipts", "Invoices", "Reports",
             "Certificates", "Financial", "Medical", "Legal", "Resume & CV", 
             "Letters", "Contracts",
             # Work & Personal
-            "Personal", "Work",
+            "Personal", "Work & Business", "Work",
             # Media
             "Music", "Videos", "Archives", "Software",
             # Code & Data
             "Code", "Data", "Notes", "Configuration",
+            # Legacy (keep for backward compat)
+            "Photos",
             # Fallback
             "Other", "Uncategorized"
         ]
@@ -342,8 +352,26 @@ def _parse_ai_response(response_text, file_type):
             
             if not matched:
                 # Smart fallback based on common keywords
-                if any(word in category_lower for word in ['photo', 'image', 'picture', 'selfie']):
-                    category = "Photos"
+                if any(word in category_lower for word in ['sport', 'athlete', 'cricket', 'football', 'basketball', 'fitness', 'match', 'team']):
+                    category = "Sports"
+                elif any(word in category_lower for word in ['travel', 'nature', 'landscape', 'vacation', 'scenery', 'landmark']):
+                    category = "Travel & Nature"
+                elif any(word in category_lower for word in ['food', 'recipe', 'meal', 'cooking', 'restaurant', 'dish']):
+                    category = "Food & Recipes"
+                elif any(word in category_lower for word in ['selfie', 'portrait', 'people', 'family', 'group photo']):
+                    category = "People & Selfies"
+                elif any(word in category_lower for word in ['celebration', 'birthday', 'party', 'wedding', 'festival']):
+                    category = "Celebrations"
+                elif any(word in category_lower for word in ['animal', 'pet', 'wildlife', 'dog', 'cat']):
+                    category = "Animals & Pets"
+                elif any(word in category_lower for word in ['fashion', 'clothing', 'outfit', 'lifestyle']):
+                    category = "Fashion & Lifestyle"
+                elif any(word in category_lower for word in ['car', 'bike', 'vehicle', 'automotive', 'motorcycle']):
+                    category = "Vehicles"
+                elif any(word in category_lower for word in ['tech', 'gadget', 'electronic', 'device']):
+                    category = "Technology"
+                elif any(word in category_lower for word in ['photo', 'image', 'picture']):
+                    category = "People & Selfies"
                 elif any(word in category_lower for word in ['screenshot', 'screen']):
                     category = "Screenshots"
                 elif any(word in category_lower for word in ['meme', 'funny', 'entertainment']):
@@ -361,7 +389,7 @@ def _parse_ai_response(response_text, file_type):
                 elif any(word in category_lower for word in ['code', 'programming', 'script']):
                     category = "Code"
                 elif any(word in category_lower for word in ['work', 'business', 'professional', 'office']):
-                    category = "Work"
+                    category = "Work & Business"
                 elif any(word in category_lower for word in ['personal', 'private', 'diary']):
                     category = "Personal"
                 else:
@@ -425,20 +453,46 @@ Example response: vacation_photo.jpg, trip_2024.png, beach_sunset.jpg"""
 def categorize_by_tags_simple(tags_string):
     """
     Determine category from tags using comprehensive keyword matching (no AI call).
-    Used for migrating existing files that have tags but no category.
+    Uses content-specific categories for better relevance.
     """
     if not tags_string:
         return "Uncategorized"
     
     tags_lower = tags_string.lower()
     
-    # Define category keywords (ordered by priority - more specific first)
+    # Define category keywords (ordered by priority - most specific first)
     category_keywords = {
-        # Specific categories first
+        # Content-specific categories (highest priority)
+        "Sports": ["cricket", "cricketer", "football", "soccer", "basketball", "tennis", "badminton",
+                   "athlete", "player", "match", "tournament", "trophy", "stadium", "team",
+                   "fitness", "gym", "workout", "sport", "olympic", "ipl", "world cup",
+                   "batting", "bowling", "goal", "score", "champion"],
+        "Travel & Nature": ["travel", "vacation", "trip", "journey", "tourism", "landmark",
+                           "landscape", "nature", "mountain", "beach", "ocean", "river", "forest",
+                           "sunset", "sunrise", "scenery", "outdoor", "hiking", "adventure",
+                           "monument", "temple", "heritage", "destination"],
+        "Food & Recipes": ["food", "recipe", "cooking", "meal", "dish", "restaurant", "cuisine",
+                          "breakfast", "lunch", "dinner", "snack", "dessert", "cake", "pizza",
+                          "coffee", "tea", "beverage", "kitchen", "chef", "delicious"],
+        "Celebrations": ["birthday", "party", "wedding", "festival", "celebration", "ceremony",
+                        "diwali", "holi", "christmas", "new year", "anniversary", "graduation",
+                        "event", "decoration", "cake", "gift"],
+        "Animals & Pets": ["dog", "cat", "pet", "animal", "puppy", "kitten", "bird", "fish",
+                          "wildlife", "zoo", "horse", "cow", "lion", "tiger", "elephant"],
+        "Fashion & Lifestyle": ["fashion", "clothing", "outfit", "dress", "style", "accessory",
+                               "shoes", "watch", "jewelry", "lifestyle", "beauty", "makeup",
+                               "hairstyle", "shopping", "brand"],
+        "Vehicles": ["car", "bike", "motorcycle", "vehicle", "automobile", "truck", "bus",
+                    "train", "airplane", "driving", "road", "engine", "speed"],
+        "Technology": ["gadget", "smartphone", "laptop", "computer", "electronic", "device",
+                      "app", "software", "hardware", "tech", "robot", "ai", "machine learning"],
+        
+        # Specific document/media categories
         "Screenshots": ["screenshot", "screen capture", "screen shot", "snip", "printscreen"],
-        "Memes & Entertainment": ["meme", "funny", "joke", "entertainment", "viral", "humor"],
-        "Receipts": ["receipt", "purchase receipt", "shopping", "transaction", "order confirmation"],
-        "Invoices": ["invoice", "billing", "bill", "payment due", "amount due"],
+        "Memes & Entertainment": ["meme", "funny", "joke", "entertainment", "viral", "humor",
+                                  "movie", "series", "anime", "cartoon"],
+        "Receipts": ["receipt", "purchase receipt", "transaction", "order confirmation"],
+        "Invoices": ["invoice", "billing", "payment due", "amount due"],
         "Certificates": ["certificate", "certification", "degree", "diploma", "award", "achievement", "license"],
         "Resume & CV": ["resume", "cv", "curriculum vitae", "cover letter", "job application", "career"],
         "Financial": ["bank", "statement", "tax", "financial", "investment", "salary", "income", "expense"],
@@ -447,18 +501,17 @@ def categorize_by_tags_simple(tags_string):
         "Code": ["code", "programming", "python", "javascript", "java", "function", "class", "api", "github", "repository"],
         "Art & Design": ["art", "design", "illustration", "graphic", "creative", "artwork", "drawing", "sketch"],
         
-        # Broader categories
-        "Study Materials": ["study", "notes", "lecture", "course", "class", "exam", "homework", "assignment", 
+        # Broader categories (lower priority)
+        "Study Materials": ["study", "notes", "lecture", "course", "exam", "homework", "assignment", 
                           "textbook", "education", "school", "university", "college", "research", "academic",
                           "thesis", "essay", "tutorial", "learning", "student"],
-        "Reports": ["report", "analysis", "summary", "evaluation", "assessment", "review", "findings"],
-        "Photos": ["photo", "image", "picture", "selfie", "portrait", "landscape", "camera", "jpg", "jpeg", 
-                  "png", "gif", "photography", "snapshot", "shot", "pic", "sunset", "sunrise", "nature",
-                  "travel", "vacation", "family", "friends", "memories", "outdoor", "indoor"],
-        "Documents": ["document", "form", "id card", "passport", "official", "paper", "file", "pdf", "docx"],
-        "Work": ["work", "project", "meeting", "presentation", "business", "client", "company", "office",
-                "professional", "corporate", "proposal", "strategy", "plan"],
-        "Personal": ["personal", "diary", "journal", "private", "birthday", "anniversary", "gift"],
+        "Reports": ["report", "analysis", "summary", "evaluation", "assessment", "findings"],
+        "People & Selfies": ["selfie", "portrait", "group photo", "family", "friends", "photo",
+                            "picture", "photography", "memories"],
+        "Documents": ["document", "form", "id card", "passport", "official", "paper", "pdf", "docx"],
+        "Work & Business": ["work", "project", "meeting", "presentation", "business", "client", "company", "office",
+                           "professional", "corporate", "proposal", "strategy"],
+        "Personal": ["personal", "diary", "journal", "private"],
         "Music": ["music", "song", "audio", "mp3", "wav", "album", "artist", "playlist"],
         "Videos": ["video", "movie", "clip", "mp4", "recording", "footage"],
     }
